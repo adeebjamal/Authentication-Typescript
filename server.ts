@@ -1,10 +1,16 @@
 import express, {Express, Request, Response, NextFunction} from "express";
+import mongoose from "mongoose";
 
 const app: Express = express();
 
+// Adding middlewares
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+
+// Setting up MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/authentication");
+mongoose.set("strictQuery", false);
 
 // Adding routes
 app.use("/authenticate", require("./Routes/Authenticate"));
