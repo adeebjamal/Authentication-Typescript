@@ -1,10 +1,12 @@
 import express, {Request, Response, Router} from "express";
+import jwt from "jsonwebtoken";
 
 const router: Router = express.Router();
 
 // Importing user defined files and functions
 import User from "../Models/Users";
 import userInterface from "../Interfaces/userInterface";
+import OTP_Generator from "../Functions/OTP_Generator";
 
 router.post("/register", async(req: Request, res: Response) => {
     try {
@@ -30,6 +32,14 @@ router.post("/register", async(req: Request, res: Response) => {
                 message: "User with emtered email already exists."
             });
         }
+        const OTP: number = OTP_Generator();
+        console.log(`This is the OTP ${OTP}`);
+        const encodedJWT: string = jwt.sign({userDetails: req.body, otp: OTP}, "Secret-Key");
+        res.cookie("userDetails_and_OTP", encodedJWT);
+        // Need to send the OTP to the user via email
+        return res.status(200).render("verify_otp", {
+            message: ""
+        });
     }
     catch(error) {
         console.log(error);
