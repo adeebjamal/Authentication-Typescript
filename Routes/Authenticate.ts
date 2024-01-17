@@ -7,6 +7,7 @@ const router: Router = express.Router();
 import User from "../Models/Users";
 import userInterface from "../Interfaces/userInterface";
 import OTP_Generator from "../Functions/OTP_Generator";
+import Send_OTP from "../Functions/Send_OTP";
 
 router.post("/register", async(req: Request, res: Response) => {
     try {
@@ -37,6 +38,7 @@ router.post("/register", async(req: Request, res: Response) => {
         const encodedJWT: string = jwt.sign({userDetails: req.body, otp: OTP}, "Secret-Key");
         res.cookie("userDetails_and_OTP", encodedJWT);
         // Need to send the OTP to the user via email
+        Send_OTP(req.body.userEmail, OTP);
         return res.status(200).render("verify_otp", {
             message: ""
         });
