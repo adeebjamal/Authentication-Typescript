@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Verify e-mail</title>
+    </head>
+    <body>
+        <p style="color: red;"><%= message %></p>
+        <p>Enter the OTP you received on your e-mail.</p>
+        <form action="/authenticate/OTP" method="post">
+            <input type="text" name="otp" placeholder="OTP">
+            <button type="submit">Verify</button>
+        </form>
+    </body>
+</html>

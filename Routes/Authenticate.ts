@@ -1,5 +1,6 @@
 import express, {Request, Response, Router} from "express";
 import jwt from "jsonwebtoken";
+import md5 from "md5";
 
 const router: Router = express.Router();
 
@@ -8,6 +9,7 @@ import User from "../Models/Users";
 import userInterface from "../Interfaces/userInterface";
 import OTP_Generator from "../Functions/OTP_Generator";
 import Send_OTP from "../Functions/Send_OTP";
+import decoded_JWT from "../Interfaces/JWT";
 
 router.post("/register", async(req: Request, res: Response) => {
     try {
@@ -39,7 +41,7 @@ router.post("/register", async(req: Request, res: Response) => {
         res.cookie("userDetails_and_OTP", encodedJWT);
         // Need to send the OTP to the user via email
         Send_OTP(req.body.userEmail, OTP);
-        return res.status(200).render("verify_otp", {
+        return res.status(200).render("Verify_OTP", {
             message: ""
         });
     }
@@ -47,6 +49,36 @@ router.post("/register", async(req: Request, res: Response) => {
         console.log(error);
         return res.status(500).render("homepage", {
             message: "Internal Server Error."
+        });
+    }
+});
+
+router.post("/OTP", async(req: Request, res: Response) => {
+    try {
+        if(!req.cookies.userDetails_and_OTP) {
+            return res.status(401).json({message: "Somethng went wrong."});
+        }
+        const decodedJWT: decoded_JWT = jwt.verify(req.cookies.userDetails_and_OTP, "Secret-Key");
+        if(req.body.otp == decodedJWT.otp) {
+            const createdUser = new User({
+                name: decodedJWT.userDetails.newName,
+                email: decodedJWT.userDetails.newEmail,
+                password: md5(decodedJWT.userDetails.newPassword)
+            });
+            await createdUser.save();
+            res.clearCookie("userDetails_and_OTP");
+            return res.status(201).render("homepage", {
+                message: "Registration successful. You can login now."
+            });
+        }
+        return res.status(401).render("Verify_OTP", {
+            message: "Incorrect OTP"
+        });
+    }
+    catch(error) {
+        console.log(error);
+        return res.status(500).render("homepage", {
+            message: "Internal server error"
         });
     }
 });
