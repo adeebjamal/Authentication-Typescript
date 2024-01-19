@@ -30,7 +30,7 @@ router.post("/register", async(req: Request, res: Response) => {
             });
         }
         const foundUser: userInterface | null = await User.findOne({email: req.body.newEmail});
-        if(foundUser) {
+        if(!foundUser) {
             return res.status(400).render("homepage", {
                 message: "User with emtered email already exists."
             });
@@ -79,6 +79,36 @@ router.post("/OTP", async(req: Request, res: Response) => {
         console.log(error);
         return res.status(500).render("homepage", {
             message: "Internal server error"
+        });
+    }
+});
+
+router.post("/login", async(req: Request, res: Response) => {
+    try {
+        if(!req.body.userEmail || !req.body.userPassword) {
+            return res.status(401).render("homepage", {
+                message: "Please fill all the required fields."
+            });
+        }
+        const foundUser: userInterface | null = await User.findOne({email: req.body.userEmail});
+        if(!foundUser) {
+            return res.status(400).render("homepage", {
+                message: "User with entered email doesn't exists."
+            });
+        }
+        if(foundUser.password !== md5(req.body.userPassword)) {
+            return res.status(400).render("homepage", {
+                message: "Incorrect password"
+            });
+        }
+        const jwtToken: string = jwt.sign({ID: foundUser._id}, "Secret-Key");
+        res.cookie("loggedin_user", jwtToken);
+        return res.status(200).render("dashboard");
+    }
+    catch(error) {
+        console.log(error);
+        return res.status(500).render("homepage", {
+            message: "Internal serve error."
         });
     }
 });
