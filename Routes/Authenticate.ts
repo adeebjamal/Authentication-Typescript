@@ -30,13 +30,13 @@ router.post("/register", async(req: Request, res: Response) => {
             });
         }
         const foundUser: userInterface | null = await User.findOne({email: req.body.newEmail});
-        if(!foundUser) {
+        if(foundUser) {
             return res.status(400).render("homepage", {
                 message: "User with emtered email already exists."
             });
         }
         const OTP: number = OTP_Generator();
-        console.log(`This is the OTP ${OTP}`);
+        console.log(`This is the OTP: ${OTP}`);
         const encodedJWT: string = jwt.sign({userDetails: req.body, otp: OTP}, "Secret-Key");
         res.cookie("userDetails_and_OTP", encodedJWT);
         // Need to send the OTP to the user via email
@@ -103,12 +103,30 @@ router.post("/login", async(req: Request, res: Response) => {
         }
         const jwtToken: string = jwt.sign({ID: foundUser._id}, "Secret-Key");
         res.cookie("loggedin_user", jwtToken);
-        return res.status(200).render("dashboard");
+        return res.status(200).render("dashboard", {
+            name: foundUser.name
+        });
     }
     catch(error) {
         console.log(error);
         return res.status(500).render("homepage", {
             message: "Internal serve error."
+        });
+    }
+});
+
+router.get("/logout", async(req: Request, res: Response) => {
+    try {
+        if(req.cookies.loggedin_user) {
+            res.clearCookie("loggedin_user");
+        }
+        return res.status(200).render("homepage", {
+            message: "Logout successful"
+        });
+    }
+    catch(error) {
+        return res.status(500).render("homepage", {
+            message: "Internal server error."
         });
     }
 });
